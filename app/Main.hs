@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Main (main) where
 
 import           Control.Monad.IO.Class (liftIO)
 import           Models
 import           Network.HTTP.Types     (status404)
-import           Web.Scotty             (scotty, get, captureParam, post, put, jsonData, json, raiseStatus, ActionM)
-import           Database.GP
+import           Web.Scotty             (scotty, get, captureParam, post, put, delete, jsonData, json, raiseStatus, ActionM)
+import           Database.GP (connect, setupTableFor, insert, insertMany, select, selectById, update, allEntries, Database (..), TxHandling (..))
+import qualified Database.GP as GP
 import           Database.HDBC.Sqlite3 (connectSqlite3)
 
 -- Sample product list
@@ -36,8 +38,8 @@ main = do
 
     -- Define a route to get a product by ID
     get "/products/:id" $ do
-      productIdParam <- captureParam "id"
-      prod <- liftIO $ selectById @Product conn (productIdParam :: Int)
+      productIdParam <- captureParam "id" :: ActionM Int
+      prod <- liftIO $ selectById @Product conn productIdParam
       case prod of
        Just p  -> json p
        Nothing -> raiseStatus status404 "not found"
@@ -50,10 +52,15 @@ main = do
 
     -- Define a route to update a product by ID
     put "/products/:id" $ do
-      --productIdParam <- captureParam "id"
+      productIdParam <- captureParam "id"
       updatedProduct <- jsonData
-      --let updatedProductWithId = updatedProduct { Models.id = read productIdParam }
-      updated <- liftIO $ update @Product conn updatedProduct
+      let updatedProductWithId = updatedProduct { id = productIdParam}
+      updated <- liftIO $ update @Product conn updatedProductWithId
       json updated
+
+    delete "/products/:id" $ do
+      productIdParam <- captureParam "id" :: ActionM Int
+      deleted <- liftIO $ GP.delete @Product conn (head initialProducts) { id = productIdParam }
+      json deleted
 
 
