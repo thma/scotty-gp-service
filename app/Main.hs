@@ -7,9 +7,9 @@ import           Control.Monad.IO.Class (liftIO)
 import           Models
 import           Network.HTTP.Types     (status404)
 import           Web.Scotty             (scotty, get, captureParam, post, put, delete, jsonData, json, raiseStatus, ActionM)
-import           Database.GP (connect, setupTableFor, insert, insertMany, select, selectById, update, allEntries, Database (..), TxHandling (..))
-import qualified Database.GP as GP
-import           Database.HDBC.Sqlite3 (connectSqlite3)
+import           Database.GP            (connect, setupTable, insert, insertMany, select, selectById, update, 
+                                         deleteById, allEntries, defaultSqliteMapping, TxHandling(..))
+import           Database.HDBC.Sqlite3  (connectSqlite3)
 
 -- Sample product list
 initialProducts :: [Product]
@@ -24,7 +24,7 @@ main = do
   conn <- connect AutoCommit <$> connectSqlite3 "sqlite.db"
 
   -- initialize Product table
-  _ <- setupTableFor @Product SQLite conn
+  _ <- setupTable @Product conn defaultSqliteMapping
 
   -- insert initial products
   _ <- insertMany conn initialProducts
@@ -60,7 +60,7 @@ main = do
 
     delete "/products/:id" $ do
       productIdParam <- captureParam "id" :: ActionM Int
-      deleted <- liftIO $ GP.delete @Product conn (head initialProducts) { id = productIdParam }
+      deleted <- liftIO $ deleteById @Product conn productIdParam
       json deleted
 
 
