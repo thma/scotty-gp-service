@@ -3,7 +3,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
 module Models
-  ( Product (..), Paging (..), ProductList (..)
+  ( Product (..),
+    Paging (..),
+    ProductList (..),
+    BearerToken (..),
   )
 where
 
@@ -26,9 +29,9 @@ instance Entity Product where
 
 -- Define a Paging information data type
 data Paging = Paging
-  { page :: Int,
-    size :: Int,
-    total :: Int
+  { page       :: Int,
+    size       :: Int,
+    totalPages :: Int
   }
   deriving (Show, Generic, ToJSON, FromJSON)
 
@@ -39,4 +42,11 @@ data ProductList = ProductList
   }
   deriving (Show, Generic, ToJSON, FromJSON)
 
+data BearerToken = BearerToken
+  { id    :: Int,
+    token :: Text
+  }
+  deriving (Show, Generic, ToJSON, FromJSON)
 
+instance Entity BearerToken where
+  idField = "id"

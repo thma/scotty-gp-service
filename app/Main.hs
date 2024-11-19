@@ -3,13 +3,15 @@
 
 module Main (main) where
 
-import           Control.Monad.IO.Class (liftIO)
-import           Database.GP            hiding (delete)
-import           Database.HDBC.Sqlite3  (connectSqlite3)
+import           Data.ByteString.Conversion             (toByteString')
+import           Data.Text                              hiding (count, elem, map)
+import           Database.GP                            hiding (delete)
+import           Database.HDBC.Sqlite3                  (connectSqlite3)
 import           Models
-import           Data.Text              hiding (map, count)
-import           Network.HTTP.Types     (status404)
+import           Network.HTTP.Types                     (status404)
+import           Network.Wai.Middleware.BearerTokenAuth
 import           Network.Wai.Middleware.RequestLogger
+import           UnliftIO.Exception
 import           Web.Scotty
 
 -- Sample product list
@@ -17,7 +19,6 @@ initialProducts :: [Product]
 initialProducts = map toProduct [1 .. 100]
   where
     toProduct i = Product i ("Product " <> pack (show i)) ("Description " <> pack (show i)) (19.99 + fromIntegral i * 10)
-
 
 -- Create a connection pool to the SQLite database
 sqlLitePool :: FilePath -> IO ConnectionPool
@@ -38,25 +39,33 @@ main = do
     setupTable @Product conn defaultSqliteMapping
     -- insert initial products
     insertMany conn initialProducts
+    -- setup table for bearer tokens
+    setupTable @BearerToken conn defaultSqliteMapping
+    -- insert some valid Tokens
+    let initialTokens = [BearerToken 1 "secret", BearerToken 2 "top-secret"]
+    insertMany conn initialTokens
+
+  -- Load all valid tokens from the database
+  validTokens <- withResource pool $ \conn -> select @BearerToken conn allEntries
 
   -- Start the web server
   scotty 3000 $ do
+    -- Add middleware to log all incoming requests
     middleware logStdout
+
+    -- Add middleware to authenticate all incoming requests against list of valid tokens
+    middleware $ tokenListAuth (map (\(BearerToken _ token) -> toByteString' token) validTokens)
+
     -- Define a route to list all products
     get "/products" $ do
-      products <- withPooledConn $ \conn -> select @Product conn allEntries
-      json products
-
-    get "/pages" $ do
-      pageIndex <- queryParam "page"  -- `catch` (\_ -> return 1) :: ActionM Int
-      pageSize <- param "size" -- `catch` (\_ -> return 10) :: ActionM Int
-      let first = (pageIndex-1) * pageSize + 1 :: Int
-      let last = first + pageSize - 1 :: Int
-      page <- withPooledConn $ \conn -> select @Product conn (field "id" `between` (first, last))
+      pageIndex <- queryParam "page" `catchAny` (\_ -> return 1)
+      pageSize  <- queryParam "size" `catchAny` (\_ -> return 10)
+      let firstPos = (pageIndex - 1) * pageSize + 1 :: Int
+          lastPos  = firstPos + pageSize - 1 :: Int
+      page     <- withPooledConn $ \conn -> select @Product conn (field "id" `between` (firstPos, lastPos))
       rowCount <- withPooledConn $ \conn -> count @Product conn allEntries
       let pageCount = (rowCount + pageSize - 1) `div` pageSize
-
-      let info = Paging pageIndex pageSize pageCount
+          info      = Paging pageIndex pageSize pageCount
       json $ ProductList page info
 
     -- Define a route to get a product by ID
@@ -77,7 +86,7 @@ main = do
     put "/products/:id" $ do
       productIdParam <- captureParam "id"
       updatedProduct <- jsonData
-      let updatedProductWithId = updatedProduct {id = productIdParam}
+      let updatedProductWithId = updatedProduct {id = productIdParam} :: Product
       updated <- withPooledConn $ \conn -> upsert @Product conn updatedProductWithId
       json updated
 
@@ -86,4 +95,3 @@ main = do
       productIdParam <- captureParam "id" :: ActionM Int
       deleted <- withPooledConn $ \conn -> deleteById @Product conn productIdParam
       json deleted
-

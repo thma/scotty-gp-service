@@ -39,11 +39,14 @@ library
       HDBC-sqlite3
     , aeson
     , base >=4.7 && <5
+    , bytestring-conversion
     , generic-persistence
     , http-types
     , scotty
     , text
+    , unliftio
     , wai-extra
+    , wai-middleware-bearer
   default-language: GHC2021
 
 executable scotty-gp-service
@@ -62,12 +65,15 @@ executable scotty-gp-service
       HDBC-sqlite3
     , aeson
     , base >=4.7 && <5
+    , bytestring-conversion
     , generic-persistence
     , http-types
     , scotty
     , scotty-gp-service
     , text
+    , unliftio
     , wai-extra
+    , wai-middleware-bearer
   default-language: GHC2021
 
 test-suite scotty-gp-service-test
@@ -87,10 +93,13 @@ test-suite scotty-gp-service-test
       HDBC-sqlite3
     , aeson
     , base >=4.7 && <5
+    , bytestring-conversion
     , generic-persistence
     , http-types
     , scotty
     , scotty-gp-service
     , text
+    , unliftio
     , wai-extra
+    , wai-middleware-bearer
   default-language: GHC2021

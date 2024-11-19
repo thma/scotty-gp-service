@@ -33,6 +33,9 @@ dependencies:
 - generic-persistence
 - HDBC-sqlite3
 - wai-extra
+- wai-middleware-bearer
+- unliftio
+- bytestring-conversion
 
 ghc-options:
 - -Wall
