@@ -3,7 +3,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
 module Models
-  ( Product (..),
+  ( Product (..), Paging (..), ProductList (..)
   )
 where
 
@@ -23,3 +23,20 @@ data Product = Product
 
 instance Entity Product where
   idField = "id"
+
+-- Define a Paging information data type
+data Paging = Paging
+  { page :: Int,
+    size :: Int,
+    total :: Int
+  }
+  deriving (Show, Generic, ToJSON, FromJSON)
+
+-- Define a combined data type for the product list and paging information
+data ProductList = ProductList
+  { products :: [Product],
+    paging   :: Paging
+  }
+  deriving (Show, Generic, ToJSON, FromJSON)
+
+

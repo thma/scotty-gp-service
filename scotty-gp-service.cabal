@@ -43,6 +43,7 @@ library
     , http-types
     , scotty
     , text
+    , wai-extra
   default-language: GHC2021
 
 executable scotty-gp-service
@@ -66,6 +67,7 @@ executable scotty-gp-service
     , scotty
     , scotty-gp-service
     , text
+    , wai-extra
   default-language: GHC2021
 
 test-suite scotty-gp-service-test
@@ -90,4 +92,5 @@ test-suite scotty-gp-service-test
     , scotty
     , scotty-gp-service
     , text
+    , wai-extra
   default-language: GHC2021

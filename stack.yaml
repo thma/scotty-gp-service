@@ -39,7 +39,7 @@ extra-deps:
 #- generic-persistence-0.6.0
 #- generic-persistence-0.7.0
 - git: https://github.com/thma/generic-persistence.git
-  commit: b4d824201191566fcb036c8ba8540603113adfd3
+  commit: afa810a613dda1c88edd7bf1efdd3e1b05c58b98
 - HDBC-sqlite3-2.3.3.1
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git

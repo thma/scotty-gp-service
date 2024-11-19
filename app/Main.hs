@@ -7,21 +7,21 @@ import           Control.Monad.IO.Class (liftIO)
 import           Database.GP            hiding (delete)
 import           Database.HDBC.Sqlite3  (connectSqlite3)
 import           Models
+import           Data.Text              hiding (map, count)
 import           Network.HTTP.Types     (status404)
-import           Web.Scotty             (ActionM, captureParam, delete, get,
-                                         json, jsonData, post, put, raiseStatus,
-                                         scotty)
-                                                  
+import           Network.Wai.Middleware.RequestLogger
+import           Web.Scotty
+
 -- Sample product list
 initialProducts :: [Product]
-initialProducts =
-  [ Product 1 "Product 1" "Description 1" 19.99,
-    Product 2 "Product 2" "Description 2" 29.99
-  ]
+initialProducts = map toProduct [1 .. 100]
+  where
+    toProduct i = Product i ("Product " <> pack (show i)) ("Description " <> pack (show i)) (19.99 + fromIntegral i * 10)
+
 
 -- Create a connection pool to the SQLite database
 sqlLitePool :: FilePath -> IO ConnectionPool
-sqlLitePool sqlLiteFile = createConnPool AutoCommit sqlLiteFile connectSqlite3 10 100  
+sqlLitePool sqlLiteFile = createConnPool AutoCommit sqlLiteFile connectSqlite3 10 100
 
 -- Helper function to run a database action with a connection from the pool
 withConnFrom :: ConnectionPool -> (Conn -> IO a) -> ActionM a
@@ -41,10 +41,23 @@ main = do
 
   -- Start the web server
   scotty 3000 $ do
+    middleware logStdout
     -- Define a route to list all products
     get "/products" $ do
       products <- withPooledConn $ \conn -> select @Product conn allEntries
       json products
+
+    get "/pages" $ do
+      pageIndex <- queryParam "page"  -- `catch` (\_ -> return 1) :: ActionM Int
+      pageSize <- param "size" -- `catch` (\_ -> return 10) :: ActionM Int
+      let first = (pageIndex-1) * pageSize + 1 :: Int
+      let last = first + pageSize - 1 :: Int
+      page <- withPooledConn $ \conn -> select @Product conn (field "id" `between` (first, last))
+      rowCount <- withPooledConn $ \conn -> count @Product conn allEntries
+      let pageCount = (rowCount + pageSize - 1) `div` pageSize
+
+      let info = Paging pageIndex pageSize pageCount
+      json $ ProductList page info
 
     -- Define a route to get a product by ID
     get "/products/:id" $ do

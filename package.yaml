@@ -32,6 +32,7 @@ dependencies:
 - http-types
 - generic-persistence
 - HDBC-sqlite3
+- wai-extra
 
 ghc-options:
 - -Wall
