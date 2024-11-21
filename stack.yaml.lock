@@ -5,15 +5,15 @@
 
 packages:
 - completed:
-    commit: afa810a613dda1c88edd7bf1efdd3e1b05c58b98
+    commit: 4ff099e5a8291f0831f40c3e519fc69a80ee2cb3
     git: https://github.com/thma/generic-persistence.git
     name: generic-persistence
     pantry-tree:
-      sha256: 75cd353c45bf3e23bf962653ae5426a76bf945997a7eeaec9168cd68b0bef4bd
+      sha256: ba23581de24931bbd69ca4388317208c4a740098221e1254cde93d9d205eb413
       size: 2078
     version: 0.7.0.0
   original:
-    commit: afa810a613dda1c88edd7bf1efdd3e1b05c58b98
+    commit: 4ff099e5a8291f0831f40c3e519fc69a80ee2cb3
     git: https://github.com/thma/generic-persistence.git
 - completed:
     hackage: HDBC-sqlite3-2.3.3.1@sha256:5025fd94d02b9b3f0b8b8233796dd9a85a0b3dda6503c6e671e3eddbc51cb4d4,2424
