@@ -4,7 +4,7 @@
 
 module Models
   ( Product (..),
-    Paging (..),
+    Pagination (..),
     ProductList (..),
     BearerToken (..),
   )
@@ -14,6 +14,7 @@ import           Data.Aeson   (FromJSON, ToJSON)
 import           Data.Text    (Text)
 import           Database.GP  (Entity (..))
 import           GHC.Generics (Generic)
+import           Data.Time.Clock ( UTCTime )
 
 -- Define a Product data type
 data Product = Product
@@ -28,23 +29,26 @@ instance Entity Product where
   idField = "id"
 
 -- Define a Paging information data type
-data Paging = Paging
-  { page       :: Int,
-    size       :: Int,
-    totalPages :: Int
+data Pagination = Pagination
+  { totalRecords :: Int,
+    currentPage  :: Int,
+    totalPages   :: Int,
+    nextPage     :: Maybe Int,
+    prevPage     :: Maybe Int
   }
   deriving (Show, Generic, ToJSON, FromJSON)
 
 -- Define a combined data type for the product list and paging information
 data ProductList = ProductList
   { products :: [Product],
-    paging   :: Paging
+    paging   :: Pagination
   }
   deriving (Show, Generic, ToJSON, FromJSON)
 
 data BearerToken = BearerToken
-  { id    :: Int,
-    token :: Text
+  { id :: Int,
+    token  :: Text,
+    expiry :: UTCTime
   }
   deriving (Show, Generic, ToJSON, FromJSON)
 

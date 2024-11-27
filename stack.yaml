@@ -36,14 +36,10 @@ packages:
 # forks / in-progress versions pinned to a git hash. For example:
 #
 extra-deps:
-#- generic-persistence-0.6.0
-#- generic-persistence-0.7.0
-- git: https://github.com/thma/generic-persistence.git
-  commit: 4ff099e5a8291f0831f40c3e519fc69a80ee2cb3
+- generic-persistence-0.7.0.0
+#- git: https://github.com/thma/generic-persistence.git
+#  commit: ba67631cf40b480453374153f288585b9869255c
 - HDBC-sqlite3-2.3.3.1
-# - acme-missiles-0.3
-# - git: https://github.com/commercialhaskell/stack.git
-#   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
 # extra-deps: []
 

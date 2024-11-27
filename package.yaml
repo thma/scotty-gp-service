@@ -36,6 +36,7 @@ dependencies:
 - wai-middleware-bearer
 - unliftio
 - bytestring-conversion
+- time
 
 ghc-options:
 - -Wall
