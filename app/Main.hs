@@ -3,7 +3,8 @@
 
 module Main (main) where
 
-import           Data.Text                              (pack)                              
+import           Data.Text                              (pack)
+import           Data.Time.Clock
 import           Database.GP                            hiding (delete)
 import           Database.HDBC.Sqlite3                  (connectSqlite3)
 import           Models
@@ -12,8 +13,6 @@ import           Network.Wai.Middleware.BearerTokenAuth
 import           Network.Wai.Middleware.RequestLogger
 import           UnliftIO.Exception
 import           Web.Scotty
-import           Data.Time.Clock
-
 
 -- Sample product list
 initialProducts :: [Product]
@@ -35,11 +34,9 @@ validateToken pool token = do
       fExpiry = field "expiry"
   -- Check if the token exists in the BearerToken table and has not expired
   now <- getCurrentTime
-  tokens <- withResource pool $ \conn -> 
+  tokens <- withResource pool $ \conn ->
     select @BearerToken conn (fToken =. token &&. fExpiry >. now)
   return $ not (null tokens)
-
-
 
 main :: IO ()
 main = do
@@ -53,10 +50,13 @@ main = do
     insertMany conn initialProducts
     -- setup table for bearer tokens
     setupTable @BearerToken conn defaultSqliteMapping
-    -- insert some valid Tokens
+    -- insert some tokens with different expiry dates
     now <- getCurrentTime
     let oneDay = addUTCTime nominalDay now
-    let initialTokens = [BearerToken 1 "top-secret" oneDay, BearerToken 2 "secret" now]
+    let initialTokens =
+          [ BearerToken "top-secret" oneDay, -- expires in 1 day
+            BearerToken "secret" now -- expires immediately
+          ]
     insertMany conn initialTokens
 
   -- Start the web server
@@ -67,15 +67,20 @@ main = do
     -- Add middleware to authenticate all incoming requests against tokens in the BearerToken table
     middleware $ tokenAuth (validateToken pool)
 
-    -- Define a route to list all products
+    get "/all-products" $ do
+      products <- withConnFrom pool $ \conn -> select @Product conn  allEntries
+      json products
+
+    -- Define a route to list all products with pagination
     get "/products" $ do
       currentPage <- queryParam "page" `catchAny` (\_ -> return 1)
-      pageSize    <- queryParam "size" `catchAny` (\_ -> return 10)
+      pageSize <- queryParam "size" `catchAny` (\_ -> return 20)
       let firstPos = (currentPage - 1) * pageSize + 1 :: Int
-          lastPos  = firstPos + pageSize - 1 :: Int
-      page         <- withConnFrom pool $ \conn -> select @Product conn (field "id" `between` (firstPos, lastPos))
-      totalRecords <- withConnFrom pool $ \conn -> count  @Product conn allEntries
-      json $ ProductList page (pagination totalRecords currentPage pageSize)
+          lastPos = firstPos + pageSize - 1 :: Int
+      page <- withConnFrom pool $ \conn -> select @Product conn (field "id" `between` (firstPos, lastPos))
+      totalRecords <- withConnFrom pool $ \conn -> count @Product conn allEntries
+      let info = buildPagination totalRecords currentPage pageSize
+      json $ ProductList page info
 
     -- Define a route to get a product by ID
     get "/products/:id" $ do
@@ -104,10 +109,3 @@ main = do
       productIdParam <- captureParam "id" :: ActionM Int
       deleted <- withConnFrom pool $ \conn -> deleteById @Product conn productIdParam
       json deleted
-
-pagination :: Int -> Int -> Int -> Pagination
-pagination totalRecords currentPage pageSize =
-  let totalPages = (totalRecords + pageSize - 1) `div` pageSize
-      nextPage   = if currentPage >= totalPages then Nothing else Just (currentPage + 1)
-      prevPage   = if currentPage > 1 then Just (currentPage - 1) else Nothing
-   in Pagination totalRecords currentPage totalPages nextPage prevPage
