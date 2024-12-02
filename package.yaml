@@ -30,7 +30,7 @@ dependencies:
 - text
 - aeson
 - http-types
-- generic-persistence
+- generic-persistence >= 0.7.0.1
 - HDBC-sqlite3
 - wai-extra
 - wai-middleware-bearer

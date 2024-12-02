@@ -39,8 +39,9 @@ library
       HDBC-sqlite3
     , aeson
     , base >=4.7 && <5
+    , bytestring
     , bytestring-conversion
-    , generic-persistence
+    , generic-persistence >=0.7.0.1
     , http-types
     , scotty
     , text
@@ -66,8 +67,9 @@ executable scotty-gp-service
       HDBC-sqlite3
     , aeson
     , base >=4.7 && <5
+    , bytestring
     , bytestring-conversion
-    , generic-persistence
+    , generic-persistence >=0.7.0.1
     , http-types
     , scotty
     , scotty-gp-service
@@ -95,8 +97,9 @@ test-suite scotty-gp-service-test
       HDBC-sqlite3
     , aeson
     , base >=4.7 && <5
+    , bytestring
     , bytestring-conversion
-    , generic-persistence
+    , generic-persistence >=0.7.0.1
     , http-types
     , scotty
     , scotty-gp-service

@@ -48,13 +48,13 @@ buildPagination :: Int -> Int -> Int -> Pagination
 buildPagination totalRecords currentPage pageSize =
   let totalPages = (totalRecords + pageSize - 1) `div` pageSize
       nextPage
-        | currentPage < 1          = Just 1
+        | currentPage < 1 = Just 1
         | currentPage < totalPages = Just (currentPage + 1)
-        | otherwise                = Nothing
+        | otherwise = Nothing
       prevPage
         | currentPage > totalPages = Just totalPages
-        | currentPage > 1          = Just (currentPage - 1)
-        | otherwise                = Nothing
+        | currentPage > 1 = Just (currentPage - 1)
+        | otherwise = Nothing
    in Pagination totalRecords currentPage totalPages nextPage prevPage
 
 -- Define a combined data type for the product list and paging information
